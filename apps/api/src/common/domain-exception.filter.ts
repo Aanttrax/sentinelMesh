@@ -11,12 +11,18 @@ import {
   ServiceAlreadyDisabledError,
   ValidationError,
 } from '@sentinelmesh/service-registration';
+import {
+  ApiKeyNotFoundError,
+  ApiKeyAlreadyRevokedError,
+} from '@sentinelmesh/api-key-management';
 
 @Catch(
   DuplicateServiceError,
   ServiceNotFoundError,
   ServiceAlreadyDisabledError,
   ValidationError,
+  ApiKeyNotFoundError,
+  ApiKeyAlreadyRevokedError,
 )
 export class DomainExceptionFilter implements ExceptionFilter {
   catch(exception: Error, host: ArgumentsHost): void {
@@ -55,6 +61,24 @@ export class DomainExceptionFilter implements ExceptionFilter {
         statusCode: HttpStatus.BAD_REQUEST,
         message: exception.message,
         error: 'ValidationError',
+      });
+      return;
+    }
+
+    if (exception instanceof ApiKeyNotFoundError) {
+      response.status(HttpStatus.NOT_FOUND).json({
+        statusCode: HttpStatus.NOT_FOUND,
+        message: exception.message,
+        error: 'ApiKeyNotFoundError',
+      });
+      return;
+    }
+
+    if (exception instanceof ApiKeyAlreadyRevokedError) {
+      response.status(HttpStatus.CONFLICT).json({
+        statusCode: HttpStatus.CONFLICT,
+        message: exception.message,
+        error: 'ApiKeyAlreadyRevokedError',
       });
       return;
     }
