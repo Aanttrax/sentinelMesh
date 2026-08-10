@@ -1,0 +1,14 @@
+{
+  "name": "@sentinelmesh/service-registration",
+  "version": "0.1.0",
+  "private": true,
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc -b",
+    "test": "jest"
+  },
+  "dependencies": {
+    "@sentinelmesh/event-schema": "*"
+  }
+}

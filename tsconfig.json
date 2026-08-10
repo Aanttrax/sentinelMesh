@@ -4,6 +4,7 @@
     { "path": "apps/collector" },
     { "path": "apps/worker" },
     { "path": "apps/api" },
-    { "path": "libs/event-schema" }
+    { "path": "libs/event-schema" },
+    { "path": "libs/service-registration" }
   ]
 }
