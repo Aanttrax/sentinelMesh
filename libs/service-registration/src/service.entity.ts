@@ -52,6 +52,18 @@ export class Service {
     this._status = ServiceStatus.Disabled;
   }
 
+  /** Serialisation helper — exposes status and createdAt in JSON output. */
+  toJSON(): Record<string, unknown> {
+    return {
+      id: this.id,
+      name: this.name,
+      environment: this.environment,
+      version: this.version,
+      status: this._status,
+      createdAt: this.createdAt.toISOString(),
+    };
+  }
+
   private validate(params: CreateServiceParams): void {
     if (!params.name || params.name.trim().length === 0) {
       throw new ValidationError('name is required');
