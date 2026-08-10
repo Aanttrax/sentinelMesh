@@ -5,6 +5,7 @@
     { "path": "apps/worker" },
     { "path": "apps/api" },
     { "path": "libs/event-schema" },
-    { "path": "libs/service-registration" }
+    { "path": "libs/service-registration" },
+    { "path": "libs/api-key-management" }
   ]
 }
