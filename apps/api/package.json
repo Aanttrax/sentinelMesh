@@ -3,6 +3,17 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "build": "tsc -b"
+    "build": "tsc -b",
+    "start:dev": "ts-node src/main.ts"
+  },
+  "dependencies": {
+    "@nestjs/common": "^11.0.0",
+    "@nestjs/core": "^11.0.0",
+    "@nestjs/platform-express": "^11.0.0",
+    "@sentinelmesh/service-registration": "*",
+    "class-transformer": "^0.5.1",
+    "class-validator": "^0.14.1",
+    "reflect-metadata": "^0.2.2",
+    "rxjs": "^7.8.1"
   }
 }
