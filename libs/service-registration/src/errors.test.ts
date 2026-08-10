@@ -1,9 +1,4 @@
-import {
-  DuplicateServiceError,
-  ServiceNotFoundError,
-  ServiceAlreadyDisabledError,
-  ValidationError,
-} from './errors';
+import { DuplicateServiceError, ServiceNotFoundError, ServiceAlreadyDisabledError, ValidationError } from './errors';
 
 describe('DuplicateServiceError', () => {
   it('should extend Error', () => {
@@ -18,9 +13,7 @@ describe('DuplicateServiceError', () => {
 
   it('should include the service name in the message', () => {
     const error = new DuplicateServiceError('payment-api');
-    expect(error.message).toBe(
-      'A service with the name "payment-api" already exists',
-    );
+    expect(error.message).toBe('A service with the name "payment-api" already exists');
   });
 });
 
@@ -37,9 +30,7 @@ describe('ServiceNotFoundError', () => {
 
   it('should include the service ID in the message', () => {
     const error = new ServiceNotFoundError('abc-123');
-    expect(error.message).toBe(
-      'Service with id "abc-123" was not found',
-    );
+    expect(error.message).toBe('Service with id "abc-123" was not found');
   });
 });
 
@@ -56,9 +47,7 @@ describe('ServiceAlreadyDisabledError', () => {
 
   it('should indicate the service is already disabled', () => {
     const error = new ServiceAlreadyDisabledError('abc-123');
-    expect(error.message).toBe(
-      'Service with id "abc-123" is already disabled',
-    );
+    expect(error.message).toBe('Service with id "abc-123" is already disabled');
   });
 });
 

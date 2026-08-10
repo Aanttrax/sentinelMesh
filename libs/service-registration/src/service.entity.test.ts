@@ -26,9 +26,7 @@ describe('Service', () => {
       expect(service.id).toBeTruthy();
       expect(typeof service.id).toBe('string');
       // UUIDv4 format: 8-4-4-4-12 hex digits
-      expect(service.id).toMatch(
-        /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i,
-      );
+      expect(service.id).toMatch(/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i);
     });
 
     it('should generate unique IDs for different services', () => {

@@ -1,9 +1,4 @@
-import {
-  ExceptionFilter,
-  Catch,
-  ArgumentsHost,
-  HttpStatus,
-} from '@nestjs/common';
+import { ExceptionFilter, Catch, ArgumentsHost, HttpStatus } from '@nestjs/common';
 import type { Response } from 'express';
 import {
   DuplicateServiceError,
@@ -11,10 +6,7 @@ import {
   ServiceAlreadyDisabledError,
   ValidationError,
 } from '@sentinelmesh/service-registration';
-import {
-  ApiKeyNotFoundError,
-  ApiKeyAlreadyRevokedError,
-} from '@sentinelmesh/api-key-management';
+import { ApiKeyNotFoundError, ApiKeyAlreadyRevokedError } from '@sentinelmesh/api-key-management';
 
 @Catch(
   DuplicateServiceError,

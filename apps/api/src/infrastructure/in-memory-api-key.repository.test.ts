@@ -44,9 +44,7 @@ describe('InMemoryApiKeyRepository', () => {
 
       const keys = await repo.findByServiceId('payment-api');
       expect(keys).toHaveLength(2);
-      expect(keys.map((k: ApiKey) => k.id).sort()).toEqual(
-        [key1.id, key2.id].sort(),
-      );
+      expect(keys.map((k: ApiKey) => k.id).sort()).toEqual([key1.id, key2.id].sort());
     });
 
     it('should overwrite an existing key with the same id', async () => {
@@ -85,9 +83,7 @@ describe('InMemoryApiKeyRepository', () => {
       await repo.save(keyB);
 
       const found = await repo.findById(keyA.id);
-      expect(found).toEqual(
-        expect.objectContaining({ serviceId: 'svc-a' }),
-      );
+      expect(found).toEqual(expect.objectContaining({ serviceId: 'svc-a' }));
     });
 
     it('should find a key when multiple keys exist for the same service', async () => {
@@ -123,9 +119,7 @@ describe('InMemoryApiKeyRepository', () => {
 
       const result = await repo.findByServiceId('payment-api');
       expect(result).toHaveLength(2);
-      expect(result.map((k: ApiKey) => k.id).sort()).toEqual(
-        [key1.id, key2.id].sort(),
-      );
+      expect(result.map((k: ApiKey) => k.id).sort()).toEqual([key1.id, key2.id].sort());
     });
 
     it('should return only keys for the requested service, not other services', async () => {
@@ -137,11 +131,7 @@ describe('InMemoryApiKeyRepository', () => {
 
       const result = await repo.findByServiceId('payment-api');
       expect(result).toHaveLength(1);
-      expect(result).toEqual(
-        expect.arrayContaining([
-          expect.objectContaining({ id: payKey.id }),
-        ]),
-      );
+      expect(result).toEqual(expect.arrayContaining([expect.objectContaining({ id: payKey.id })]));
     });
   });
 
@@ -183,9 +173,7 @@ describe('InMemoryApiKeyRepository', () => {
       await repo.save(key2);
 
       const found = await repo.findByHash(key2.keyHash);
-      expect(found).toEqual(
-        expect.objectContaining({ id: key2.id }),
-      );
+      expect(found).toEqual(expect.objectContaining({ id: key2.id }));
     });
 
     it('should find a key across different services by hash', async () => {
@@ -198,9 +186,7 @@ describe('InMemoryApiKeyRepository', () => {
       await repo.save(authKey);
 
       const found = await repo.findByHash(payKey2.keyHash);
-      expect(found).toEqual(
-        expect.objectContaining({ id: payKey2.id }),
-      );
+      expect(found).toEqual(expect.objectContaining({ id: payKey2.id }));
     });
   });
 });

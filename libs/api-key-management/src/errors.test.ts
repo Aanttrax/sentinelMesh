@@ -13,9 +13,7 @@ describe('ApiKeyNotFoundError', () => {
 
   it('should include the key ID in the message', () => {
     const error = new ApiKeyNotFoundError('key-001');
-    expect(error.message).toBe(
-      'API key with id "key-001" was not found',
-    );
+    expect(error.message).toBe('API key with id "key-001" was not found');
   });
 });
 
@@ -32,8 +30,6 @@ describe('ApiKeyAlreadyRevokedError', () => {
 
   it('should indicate the key is already revoked', () => {
     const error = new ApiKeyAlreadyRevokedError('key-001');
-    expect(error.message).toBe(
-      'API key with id "key-001" is already revoked',
-    );
+    expect(error.message).toBe('API key with id "key-001" is already revoked');
   });
 });

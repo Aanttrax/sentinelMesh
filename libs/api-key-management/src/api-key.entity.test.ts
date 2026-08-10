@@ -16,9 +16,7 @@ describe('ApiKey', () => {
 
       expect(apiKey.id).toBeTruthy();
       expect(typeof apiKey.id).toBe('string');
-      expect(apiKey.id).toMatch(
-        /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i,
-      );
+      expect(apiKey.id).toMatch(/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i);
     });
 
     it('should generate unique IDs for different keys', () => {
@@ -41,9 +39,7 @@ describe('ApiKey', () => {
       expect(apiKey.keyPrefix).toHaveLength(4);
       expect(apiKey.keyPrefix).toMatch(/^[0-9a-f]{4}$/i);
       // prefix must be the last 4 hex chars of rawKey
-      expect(apiKey.rawKey.slice(-4).toLowerCase()).toBe(
-        apiKey.keyPrefix.toLowerCase(),
-      );
+      expect(apiKey.rawKey.slice(-4).toLowerCase()).toBe(apiKey.keyPrefix.toLowerCase());
     });
 
     it('should store a SHA-256 hash of the rawKey', () => {
@@ -59,9 +55,7 @@ describe('ApiKey', () => {
       const apiKey = ApiKey.create({ serviceId: 'payment-api' });
       const after = new Date();
 
-      expect(apiKey.createdAt.getTime()).toBeGreaterThanOrEqual(
-        before.getTime(),
-      );
+      expect(apiKey.createdAt.getTime()).toBeGreaterThanOrEqual(before.getTime());
       expect(apiKey.createdAt.getTime()).toBeLessThanOrEqual(after.getTime());
     });
 

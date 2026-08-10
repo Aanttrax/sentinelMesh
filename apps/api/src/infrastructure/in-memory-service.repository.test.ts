@@ -53,9 +53,7 @@ describe('InMemoryServiceRepository', () => {
       await repo.save(service);
 
       const found = await repo.findById(service.id);
-      expect(found).toEqual(
-        expect.objectContaining({ status: ServiceStatus.Disabled }),
-      );
+      expect(found).toEqual(expect.objectContaining({ status: ServiceStatus.Disabled }));
     });
   });
 
@@ -82,9 +80,7 @@ describe('InMemoryServiceRepository', () => {
       await repo.save(svcB);
 
       const found = await repo.findById(svcA.id);
-      expect(found).toEqual(
-        expect.objectContaining({ name: 'svc-a' }),
-      );
+      expect(found).toEqual(expect.objectContaining({ name: 'svc-a' }));
     });
   });
 
@@ -99,9 +95,7 @@ describe('InMemoryServiceRepository', () => {
       await repo.save(service);
       const result = await repo.findByName('payment-api');
 
-      expect(result).toEqual(
-        expect.objectContaining({ name: 'payment-api' }),
-      );
+      expect(result).toEqual(expect.objectContaining({ name: 'payment-api' }));
     });
 
     it('should be case-insensitive', async () => {
@@ -114,9 +108,7 @@ describe('InMemoryServiceRepository', () => {
       await repo.save(service);
 
       const result = await repo.findByName('payment-api');
-      expect(result).toEqual(
-        expect.objectContaining({ name: 'Payment-API' }),
-      );
+      expect(result).toEqual(expect.objectContaining({ name: 'Payment-API' }));
     });
 
     it('should return null when no matching name exists', async () => {

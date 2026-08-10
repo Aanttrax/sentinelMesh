@@ -1,22 +1,11 @@
-import {
-  Controller,
-  Post,
-  Get,
-  Patch,
-  Param,
-  Body,
-  HttpCode,
-  HttpStatus,
-} from '@nestjs/common';
+import { Controller, Post, Get, Patch, Param, Body, HttpCode, HttpStatus } from '@nestjs/common';
 import { ServiceRegistrationService } from './service-registration.service';
 import { CreateServiceDto } from './dto/create-service.dto';
 import type { Service } from '@sentinelmesh/service-registration';
 
 @Controller('services')
 export class ServiceRegistrationController {
-  constructor(
-    private readonly service: ServiceRegistrationService,
-  ) {}
+  constructor(private readonly service: ServiceRegistrationService) {}
 
   @Post()
   @HttpCode(HttpStatus.CREATED)

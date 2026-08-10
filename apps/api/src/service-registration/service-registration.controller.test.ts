@@ -77,10 +77,7 @@ describe('ServiceRegistrationController (integration)', () => {
     });
 
     it('should return 400 when required fields are missing', async () => {
-      const res = await request(app.getHttpServer())
-        .post('/services')
-        .send({ name: '' })
-        .expect(400);
+      const res = await request(app.getHttpServer()).post('/services').send({ name: '' }).expect(400);
 
       const body = res.body as ErrorShape;
       expect(body).toHaveProperty('statusCode', 400);
@@ -122,9 +119,7 @@ describe('ServiceRegistrationController (integration)', () => {
 
   describe('GET /services', () => {
     it('should return an empty array when no services exist', async () => {
-      const res = await request(app.getHttpServer())
-        .get('/services')
-        .expect(200);
+      const res = await request(app.getHttpServer()).get('/services').expect(200);
 
       const body = res.body as ServiceShape[];
       expect(body).toEqual([]);
@@ -138,9 +133,7 @@ describe('ServiceRegistrationController (integration)', () => {
         .post('/services')
         .send({ name: 'svc-b', environment: 'staging', version: '2.0.0' });
 
-      const res = await request(app.getHttpServer())
-        .get('/services')
-        .expect(200);
+      const res = await request(app.getHttpServer()).get('/services').expect(200);
 
       const body = res.body as ServiceShape[];
       expect(body).toHaveLength(2);
@@ -159,9 +152,7 @@ describe('ServiceRegistrationController (integration)', () => {
 
       const { id } = createRes.body as ServiceShape;
 
-      const res = await request(app.getHttpServer())
-        .get(`/services/${id}`)
-        .expect(200);
+      const res = await request(app.getHttpServer()).get(`/services/${id}`).expect(200);
 
       const body = res.body as ServiceShape;
       expect(body.id).toBe(id);
@@ -169,9 +160,7 @@ describe('ServiceRegistrationController (integration)', () => {
     });
 
     it('should return 404 when the service does not exist', async () => {
-      const res = await request(app.getHttpServer())
-        .get('/services/nonexistent-id')
-        .expect(404);
+      const res = await request(app.getHttpServer()).get('/services/nonexistent-id').expect(404);
 
       const body = res.body as ErrorShape;
       expect(body).toMatchObject({
@@ -192,9 +181,7 @@ describe('ServiceRegistrationController (integration)', () => {
 
       const { id } = createRes.body as ServiceShape;
 
-      const res = await request(app.getHttpServer())
-        .patch(`/services/${id}/disable`)
-        .expect(200);
+      const res = await request(app.getHttpServer()).patch(`/services/${id}/disable`).expect(200);
 
       const body = res.body as ServiceShape;
       expect(body.id).toBe(id);
@@ -208,13 +195,9 @@ describe('ServiceRegistrationController (integration)', () => {
 
       const { id } = createRes.body as ServiceShape;
 
-      await request(app.getHttpServer())
-        .patch(`/services/${id}/disable`)
-        .expect(200);
+      await request(app.getHttpServer()).patch(`/services/${id}/disable`).expect(200);
 
-      const res = await request(app.getHttpServer())
-        .patch(`/services/${id}/disable`)
-        .expect(409);
+      const res = await request(app.getHttpServer()).patch(`/services/${id}/disable`).expect(409);
 
       const body = res.body as ErrorShape;
       expect(body).toMatchObject({
@@ -225,9 +208,7 @@ describe('ServiceRegistrationController (integration)', () => {
     });
 
     it('should return 404 when the service does not exist', async () => {
-      const res = await request(app.getHttpServer())
-        .patch('/services/nonexistent-id/disable')
-        .expect(404);
+      const res = await request(app.getHttpServer()).patch('/services/nonexistent-id/disable').expect(404);
 
       const body = res.body as ErrorShape;
       expect(body).toMatchObject({

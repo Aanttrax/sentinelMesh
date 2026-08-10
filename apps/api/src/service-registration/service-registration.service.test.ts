@@ -39,9 +39,7 @@ describe('ServiceRegistrationService', () => {
       });
 
       const found = await repo.findById(created.id);
-      expect(found).toEqual(
-        expect.objectContaining({ name: 'auth-service' }),
-      );
+      expect(found).toEqual(expect.objectContaining({ name: 'auth-service' }));
     });
 
     it('should reject duplicate names (case-insensitive)', async () => {
@@ -91,9 +89,7 @@ describe('ServiceRegistrationService', () => {
     });
 
     it('should throw ServiceNotFoundError when id does not exist', async () => {
-      await expect(
-        service.getService('nonexistent-id'),
-      ).rejects.toThrow(ServiceNotFoundError);
+      await expect(service.getService('nonexistent-id')).rejects.toThrow(ServiceNotFoundError);
     });
   });
 
@@ -135,15 +131,11 @@ describe('ServiceRegistrationService', () => {
 
       expect(disabled.status).toBe('disabled');
       const fromRepo = await repo.findById(created.id);
-      expect(fromRepo).toEqual(
-        expect.objectContaining({ status: 'disabled' }),
-      );
+      expect(fromRepo).toEqual(expect.objectContaining({ status: 'disabled' }));
     });
 
     it('should throw ServiceNotFoundError when disabling a nonexistent service', async () => {
-      await expect(
-        service.disableService('nonexistent-id'),
-      ).rejects.toThrow(ServiceNotFoundError);
+      await expect(service.disableService('nonexistent-id')).rejects.toThrow(ServiceNotFoundError);
     });
 
     it('should throw ServiceAlreadyDisabledError when disabling an already-disabled service', async () => {
@@ -155,9 +147,7 @@ describe('ServiceRegistrationService', () => {
 
       await service.disableService(created.id);
 
-      await expect(
-        service.disableService(created.id),
-      ).rejects.toThrow(ServiceAlreadyDisabledError);
+      await expect(service.disableService(created.id)).rejects.toThrow(ServiceAlreadyDisabledError);
     });
   });
 });
