@@ -7,6 +7,10 @@ import {
   ValidationError,
 } from '@sentinelmesh/service-registration';
 import { ApiKeyNotFoundError, ApiKeyAlreadyRevokedError } from '@sentinelmesh/api-key-management';
+import {
+  UnauthorizedEventError,
+  ServiceNotAcceptingEventsError,
+} from '@sentinelmesh/event-schema';
 
 @Catch(
   DuplicateServiceError,
@@ -15,6 +19,8 @@ import { ApiKeyNotFoundError, ApiKeyAlreadyRevokedError } from '@sentinelmesh/ap
   ValidationError,
   ApiKeyNotFoundError,
   ApiKeyAlreadyRevokedError,
+  UnauthorizedEventError,
+  ServiceNotAcceptingEventsError,
 )
 export class DomainExceptionFilter implements ExceptionFilter {
   catch(exception: Error, host: ArgumentsHost): void {
@@ -71,6 +77,24 @@ export class DomainExceptionFilter implements ExceptionFilter {
         statusCode: HttpStatus.CONFLICT,
         message: exception.message,
         error: 'ApiKeyAlreadyRevokedError',
+      });
+      return;
+    }
+
+    if (exception instanceof UnauthorizedEventError) {
+      response.status(HttpStatus.UNAUTHORIZED).json({
+        statusCode: HttpStatus.UNAUTHORIZED,
+        message: exception.message,
+        error: 'UnauthorizedEventError',
+      });
+      return;
+    }
+
+    if (exception instanceof ServiceNotAcceptingEventsError) {
+      response.status(HttpStatus.SERVICE_UNAVAILABLE).json({
+        statusCode: HttpStatus.SERVICE_UNAVAILABLE,
+        message: exception.message,
+        error: 'ServiceNotAcceptingEventsError',
       });
       return;
     }
