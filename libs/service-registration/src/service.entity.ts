@@ -11,6 +11,12 @@ export interface CreateServiceParams {
 export class Service {
   public readonly id: string;
   public readonly name: string;
+  /**
+   * Normalized lowercase name for case-insensitive uniqueness.
+   * The domain owns the normalization rule; infrastructure layers
+   * (e.g. MongoDB unique index) MUST use this field for lookups.
+   */
+  public readonly nameLower: string;
   public readonly environment: string;
   public readonly version: string;
   public readonly createdAt: Date;
@@ -21,6 +27,7 @@ export class Service {
     this.validate(params);
     this.id = randomUUID();
     this.name = params.name.trim();
+    this.nameLower = this.name.toLowerCase();
     this.environment = params.environment.trim();
     this.version = params.version.trim();
     this._status = ServiceStatus.Active;
@@ -57,6 +64,7 @@ export class Service {
     return {
       id: this.id,
       name: this.name,
+      nameLower: this.nameLower,
       environment: this.environment,
       version: this.version,
       status: this._status,

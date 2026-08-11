@@ -1,6 +1,6 @@
 import 'reflect-metadata';
 import { NestFactory } from '@nestjs/core';
-import { ValidationPipe } from '@nestjs/common';
+import { Logger, ValidationPipe } from '@nestjs/common';
 import { AppModule } from './app.module';
 import { DomainExceptionFilter } from './common/domain-exception.filter';
 
@@ -18,7 +18,7 @@ async function bootstrap(): Promise<void> {
 
   const port = process.env['PORT'] ?? 3000;
   await app.listen(port);
-  console.log(`API listening on port ${port}`);
+  Logger.log(`API listening on port ${port}`, 'Bootstrap');
 }
 
 void bootstrap();
