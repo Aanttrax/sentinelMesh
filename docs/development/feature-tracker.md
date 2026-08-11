@@ -8,7 +8,7 @@ Tracks implementation status of every Gherkin feature against the development ro
 | 02  | API key management                 | M1            | ✅ done   | ✅       |
 | 03  | HTTP event ingestion               | M2            | ✅ done   | ✅       |
 | 04  | Event validation                   | M2            | ✅ done   | ✅       |
-| 05  | Event idempotency                  | M3            | ⬜ pending | ⬜       |
+| 05  | Event idempotency                  | M3            | ✅ done   | ✅       |
 | 06  | Event processing                   | M3            | ⬜ pending | ⬜       |
 | 07  | Detection engine                   | M3            | ⬜ pending | ⬜       |
 | 08  | Brute force detection              | M4            | ⬜ pending | ⬜       |
