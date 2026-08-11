@@ -6,7 +6,7 @@ Tracks implementation status of every Gherkin feature against the development ro
 | --- | ---------------------------------- | ------------- | ---------- | -------- |
 | 01  | Service registration               | M1            | ✅ done   | ✅       |
 | 02  | API key management                 | M1            | ✅ done   | ✅       |
-| 03  | HTTP event ingestion               | M2            | ⬜ pending | ⬜       |
+| 03  | HTTP event ingestion               | M2            | ✅ done   | ✅       |
 | 04  | Event validation                   | M2            | ⬜ pending | ⬜       |
 | 05  | Event idempotency                  | M3            | ⬜ pending | ⬜       |
 | 06  | Event processing                   | M3            | ⬜ pending | ⬜       |

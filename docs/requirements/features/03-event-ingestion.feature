@@ -14,7 +14,7 @@ Feature: HTTP event ingestion
       | method     | POST       |
       | path       | /payments  |
       | statusCode | 200        |
-      | latencyMs  | 150        |
+      | durationMs | 150        |
     Then SentinelMesh should accept the event
     And the event should receive a unique identifier
     And the event should be published to the processing queue
