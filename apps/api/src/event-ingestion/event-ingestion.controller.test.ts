@@ -230,6 +230,19 @@ describe('EventIngestionController (integration)', () => {
     expect(body).toHaveProperty('message');
   });
 
+  it('should return 400 when path is an empty string', async () => {
+    const res = await request(app.getHttpServer())
+      .post('/events')
+      .set('X-Service-Id', serviceId)
+      .set('Authorization', `Bearer ${validKey}`)
+      .send({ ...validBody, path: '' })
+      .expect(400);
+
+    const body = res.body as ErrorShape;
+    expect(body).toHaveProperty('statusCode', 400);
+    expect(body).toHaveProperty('message');
+  });
+
   // ── POST /events ── 400 value-range: invalid statusCode ───────────
 
   it('should return 400 when statusCode is above HTTP range (999)', async () => {
@@ -251,6 +264,32 @@ describe('EventIngestionController (integration)', () => {
       .set('X-Service-Id', serviceId)
       .set('Authorization', `Bearer ${validKey}`)
       .send({ ...validBody, statusCode: 50.5 })
+      .expect(400);
+
+    const body = res.body as ErrorShape;
+    expect(body).toHaveProperty('statusCode', 400);
+    expect(body).toHaveProperty('message');
+  });
+
+  it('should return 400 when statusCode is zero', async () => {
+    const res = await request(app.getHttpServer())
+      .post('/events')
+      .set('X-Service-Id', serviceId)
+      .set('Authorization', `Bearer ${validKey}`)
+      .send({ ...validBody, statusCode: 0 })
+      .expect(400);
+
+    const body = res.body as ErrorShape;
+    expect(body).toHaveProperty('statusCode', 400);
+    expect(body).toHaveProperty('message');
+  });
+
+  it('should return 400 when statusCode is negative (-200)', async () => {
+    const res = await request(app.getHttpServer())
+      .post('/events')
+      .set('X-Service-Id', serviceId)
+      .set('Authorization', `Bearer ${validKey}`)
+      .send({ ...validBody, statusCode: -200 })
       .expect(400);
 
     const body = res.body as ErrorShape;
