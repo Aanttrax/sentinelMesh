@@ -186,4 +186,106 @@ describe('EventIngestionController (integration)', () => {
     expect(body).toHaveProperty('statusCode', 400);
     expect(body).toHaveProperty('message');
   });
+
+  // ── POST /events ── 400 value-range: invalid HTTP method ─────────
+
+  it('should return 400 when method is a non-standard value (PURGE)', async () => {
+    const res = await request(app.getHttpServer())
+      .post('/events')
+      .set('X-Service-Id', serviceId)
+      .set('Authorization', `Bearer ${validKey}`)
+      .send({ ...validBody, method: 'PURGE' })
+      .expect(400);
+
+    const body = res.body as ErrorShape;
+    expect(body).toHaveProperty('statusCode', 400);
+    expect(body).toHaveProperty('message');
+  });
+
+  it('should return 400 when method is an empty string', async () => {
+    const res = await request(app.getHttpServer())
+      .post('/events')
+      .set('X-Service-Id', serviceId)
+      .set('Authorization', `Bearer ${validKey}`)
+      .send({ ...validBody, method: '' })
+      .expect(400);
+
+    const body = res.body as ErrorShape;
+    expect(body).toHaveProperty('statusCode', 400);
+    expect(body).toHaveProperty('message');
+  });
+
+  // ── POST /events ── 400 value-range: invalid path ─────────────────
+
+  it('should return 400 when path does not start with a forward slash', async () => {
+    const res = await request(app.getHttpServer())
+      .post('/events')
+      .set('X-Service-Id', serviceId)
+      .set('Authorization', `Bearer ${validKey}`)
+      .send({ ...validBody, path: 'no-leading-slash' })
+      .expect(400);
+
+    const body = res.body as ErrorShape;
+    expect(body).toHaveProperty('statusCode', 400);
+    expect(body).toHaveProperty('message');
+  });
+
+  // ── POST /events ── 400 value-range: invalid statusCode ───────────
+
+  it('should return 400 when statusCode is above HTTP range (999)', async () => {
+    const res = await request(app.getHttpServer())
+      .post('/events')
+      .set('X-Service-Id', serviceId)
+      .set('Authorization', `Bearer ${validKey}`)
+      .send({ ...validBody, statusCode: 999 })
+      .expect(400);
+
+    const body = res.body as ErrorShape;
+    expect(body).toHaveProperty('statusCode', 400);
+    expect(body).toHaveProperty('message');
+  });
+
+  it('should return 400 when statusCode is a float (50.5)', async () => {
+    const res = await request(app.getHttpServer())
+      .post('/events')
+      .set('X-Service-Id', serviceId)
+      .set('Authorization', `Bearer ${validKey}`)
+      .send({ ...validBody, statusCode: 50.5 })
+      .expect(400);
+
+    const body = res.body as ErrorShape;
+    expect(body).toHaveProperty('statusCode', 400);
+    expect(body).toHaveProperty('message');
+  });
+
+  // ── POST /events ── 400 value-range: invalid durationMs ───────────
+
+  it('should return 400 when durationMs is negative (-10)', async () => {
+    const res = await request(app.getHttpServer())
+      .post('/events')
+      .set('X-Service-Id', serviceId)
+      .set('Authorization', `Bearer ${validKey}`)
+      .send({ ...validBody, durationMs: -10 })
+      .expect(400);
+
+    const body = res.body as ErrorShape;
+    expect(body).toHaveProperty('statusCode', 400);
+    expect(body).toHaveProperty('message');
+  });
+
+  it('should return 202 when durationMs is zero (valid edge case)', async () => {
+    const res = await request(app.getHttpServer())
+      .post('/events')
+      .set('X-Service-Id', serviceId)
+      .set('Authorization', `Bearer ${validKey}`)
+      .send({ ...validBody, durationMs: 0 })
+      .expect(202);
+
+    const body = res.body as AcceptedShape;
+    expect(body.status).toBe('accepted');
+    expect(body.eventId).toBeTruthy();
+    expect(body.eventId).toMatch(
+      /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/,
+    );
+  });
 });
