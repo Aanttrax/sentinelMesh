@@ -25,7 +25,7 @@ Tracks implementation status of every Gherkin feature against the development ro
 | 19  | Real-time threat notifications     | M6            | ⬜ pending | ⬜       |
 | 20  | SentinelMesh observability         | M7            | ⬜ pending | ⬜       |
 | 21  | Health checks                      | M7            | ⬜ pending | ⬜       |
-| 22  | Event ingestion rate limiting      | M2            | ⬜ pending | ⬜       |
+| 22  | Event ingestion rate limiting      | M2            | ✅ done   | ✅       |
 | 23  | Worker fault tolerance             | M3            | ⬜ pending | ⬜       |
 | 24  | Dead letter queue                  | M3            | ⬜ pending | ⬜       |
 | 25  | Node.js SDK                        | M9            | ⬜ pending | ⬜       |
