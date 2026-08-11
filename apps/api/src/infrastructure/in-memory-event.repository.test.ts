@@ -3,6 +3,7 @@ import type { HttpEvent } from '@sentinelmesh/event-schema';
 
 function createEvent(overrides: Partial<HttpEvent> = {}): HttpEvent {
   return {
+    eventId: 'evt-001',
     serviceId: 'payment-api',
     idempotencyKey: '550e8400-e29b-41d4-a716-446655440001',
     method: 'POST',
@@ -71,6 +72,31 @@ describe('InMemoryEventRepository', () => {
       const result = await repo.findAll();
 
       expect(result).toEqual([]);
+    });
+  });
+
+  describe('findByIdempotencyKey', () => {
+    it('should return null when key is not stored', async () => {
+      const result = await repo.findByIdempotencyKey('svc-a', 'key-xyz');
+
+      expect(result).toBeNull();
+    });
+
+    it('should return the event matching the composite key', async () => {
+      const event = createEvent({ serviceId: 'svc-a', idempotencyKey: 'idem-1' });
+      await repo.save(event);
+
+      const result = await repo.findByIdempotencyKey('svc-a', 'idem-1');
+
+      expect(result).toEqual(event);
+    });
+
+    it('should return null for same key on a different service', async () => {
+      await repo.save(createEvent({ serviceId: 'svc-a', idempotencyKey: 'idem-1' }));
+
+      const result = await repo.findByIdempotencyKey('svc-b', 'idem-1');
+
+      expect(result).toBeNull();
     });
   });
 });

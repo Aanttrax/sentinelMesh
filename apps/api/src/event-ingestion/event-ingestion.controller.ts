@@ -3,10 +3,11 @@ import {
   Post,
   Body,
   Req,
-  HttpCode,
+  Res,
   HttpStatus,
   UseGuards,
 } from '@nestjs/common';
+import type { Response } from 'express';
 import { randomUUID } from 'node:crypto';
 import { ApiKeyAuthGuard, type AuthenticatedRequest } from './guards/api-key-auth.guard';
 import { EventIngestionService } from './event-ingestion.service';
@@ -24,17 +25,21 @@ export class EventIngestionController {
   constructor(private readonly eventIngestionService: EventIngestionService) {}
 
   @Post()
-  @HttpCode(HttpStatus.ACCEPTED)
   async ingest(
     @Req() request: AuthenticatedRequest,
+    @Res() res: Response,
     @Body() dto: IngestEventDto,
-  ): Promise<{ eventId: string; status: string }> {
+  ): Promise<void> {
     const eventId = randomUUID();
 
-    return this.eventIngestionService.ingestEvent(
+    const result = await this.eventIngestionService.ingestEvent(
       request.serviceId,
       eventId,
       dto,
     );
+
+    const status =
+      result.eventId !== eventId ? HttpStatus.OK : HttpStatus.ACCEPTED;
+    res.status(status).json(result);
   }
 }

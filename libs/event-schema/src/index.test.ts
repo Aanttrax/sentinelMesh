@@ -3,6 +3,7 @@ import { HttpEvent, ThreatSeverity } from './index';
 describe('HttpEvent', () => {
   it('should accept a valid event', () => {
     const event: HttpEvent = {
+      eventId: 'evt-test-001',
       serviceId: 'svc-001',
       idempotencyKey: 'idem-abc',
       method: 'GET',

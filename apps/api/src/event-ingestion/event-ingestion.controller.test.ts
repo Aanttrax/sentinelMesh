@@ -113,6 +113,85 @@ describe('EventIngestionController (integration)', () => {
     );
   });
 
+  // ── POST /events ── 200 duplicate ──────────────────────────────
+
+  it('should return 200 with original eventId and status "duplicate" on repeat submission', async () => {
+    const first = await request(app.getHttpServer())
+      .post('/events')
+      .set('X-Service-Id', serviceId)
+      .set('Authorization', `Bearer ${validKey}`)
+      .send(validBody)
+      .expect(202);
+
+    const originalEventId = (first.body as AcceptedShape).eventId;
+
+    const second = await request(app.getHttpServer())
+      .post('/events')
+      .set('X-Service-Id', serviceId)
+      .set('Authorization', `Bearer ${validKey}`)
+      .send(validBody)
+      .expect(200);
+
+    const body = second.body as AcceptedShape;
+    expect(body.eventId).toBe(originalEventId);
+    expect(body.status).toBe('duplicate');
+  });
+
+  // ── POST /events ── cross-service key independence ────────────
+
+  it('should return 202 for a different service using the same idempotencyKey', async () => {
+    const svcReg = app.get(ServiceRegistrationService);
+    const svc2 = await svcReg.registerService({
+      name: 'checkout-api',
+      environment: 'production',
+      version: '1.0.0',
+    });
+    const keyMgmt = app.get(ApiKeyManagementService);
+    const key2 = await keyMgmt.generateKey(svc2.id);
+
+    // First service gets 202
+    await request(app.getHttpServer())
+      .post('/events')
+      .set('X-Service-Id', serviceId)
+      .set('Authorization', `Bearer ${validKey}`)
+      .send(validBody)
+      .expect(202);
+
+    // Second service, same key → also 202 (independent scope)
+    await request(app.getHttpServer())
+      .post('/events')
+      .set('X-Service-Id', svc2.id)
+      .set('Authorization', `Bearer ${key2.rawKey}`)
+      .send(validBody)
+      .expect(202);
+  });
+
+  // ── POST /events ── client-supplied idempotencyKey ────────────
+
+  it('should respect a client-supplied idempotencyKey for deduplication', async () => {
+    const body = { ...validBody, idempotencyKey: 'my-client-key-001' };
+
+    const first = await request(app.getHttpServer())
+      .post('/events')
+      .set('X-Service-Id', serviceId)
+      .set('Authorization', `Bearer ${validKey}`)
+      .send(body)
+      .expect(202);
+
+    const originalEventId = (first.body as AcceptedShape).eventId;
+
+    // Same client key → duplicate
+    const second = await request(app.getHttpServer())
+      .post('/events')
+      .set('X-Service-Id', serviceId)
+      .set('Authorization', `Bearer ${validKey}`)
+      .send(body)
+      .expect(200);
+
+    expect((second.body as AcceptedShape).eventId).toBe(originalEventId);
+    expect((second.body as AcceptedShape).status).toBe('duplicate');
+  });
+
   // ── POST /events ── 401 missing API key ─────────────────────────
 
   it('should return 401 when no Authorization header is provided', async () => {

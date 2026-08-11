@@ -118,4 +118,70 @@ describe('EventIngestionService', () => {
 
     expect(result.eventId).toBe(controllerEventId);
   });
+
+  // ── Deduplication ────────────────────────────────────────────
+
+  it('should return status "duplicate" with the original eventId when the same (serviceId, key) is seen again', async () => {
+    const activeService = Service.create({
+      name: 'payment-api',
+      environment: 'production',
+      version: '1.0.0',
+    });
+    mockGetService.mockResolvedValue(activeService);
+
+    // First ingestion — accepted
+    const first = await svc.ingestEvent('svc-a', 'evt-original', dto);
+    expect(first).toEqual({ eventId: 'evt-original', status: 'accepted' });
+    expect(await repo.findAll()).toHaveLength(1);
+
+    // Second ingestion — duplicate
+    const second = await svc.ingestEvent('svc-a', 'evt-duplicate', dto);
+    expect(second).toEqual({ eventId: 'evt-original', status: 'duplicate' });
+
+    // No additional event saved
+    expect(await repo.findAll()).toHaveLength(1);
+  });
+
+  it('should treat same idempotencyKey across different services as distinct', async () => {
+    const activeService = Service.create({
+      name: 'payment-api',
+      environment: 'production',
+      version: '1.0.0',
+    });
+    mockGetService.mockResolvedValue(activeService);
+
+    // First ingestion for svc-a
+    const first = await svc.ingestEvent('svc-a', 'evt-aaa', dto);
+    expect(first.status).toBe('accepted');
+
+    // Same key, different service — new event
+    const second = await svc.ingestEvent('svc-b', 'evt-bbb', dto);
+    expect(second.status).toBe('accepted');
+
+    expect(await repo.findAll()).toHaveLength(2);
+  });
+
+  it('should fall back to eventId when no client idempotencyKey is supplied', async () => {
+    const activeService = Service.create({
+      name: 'payment-api',
+      environment: 'production',
+      version: '1.0.0',
+    });
+    mockGetService.mockResolvedValue(activeService);
+
+    const dtoWithoutKey: IngestEventDto = {
+      method: 'GET',
+      path: '/api/health',
+      statusCode: 200,
+      durationMs: 10,
+    };
+
+    // First — accepted
+    const first = await svc.ingestEvent('svc-a', 'evt-fallback', dtoWithoutKey);
+    expect(first).toEqual({ eventId: 'evt-fallback', status: 'accepted' });
+
+    // Second with same eventId — duplicate
+    const second = await svc.ingestEvent('svc-a', 'evt-fallback', dtoWithoutKey);
+    expect(second).toEqual({ eventId: 'evt-fallback', status: 'duplicate' });
+  });
 });

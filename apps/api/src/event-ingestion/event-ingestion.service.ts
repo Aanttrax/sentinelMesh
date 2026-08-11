@@ -30,9 +30,17 @@ export class EventIngestionService {
       throw new ServiceNotAcceptingEventsError(serviceId);
     }
 
+    const idempotencyKey = dto.idempotencyKey ?? eventId;
+
+    const existing = await this.eventRepository.findByIdempotencyKey(serviceId, idempotencyKey);
+    if (existing) {
+      return { eventId: existing.eventId, status: 'duplicate' };
+    }
+
     const event: HttpEvent = {
+      eventId,
       serviceId,
-      idempotencyKey: dto.idempotencyKey ?? eventId,
+      idempotencyKey,
       method: dto.method,
       path: dto.path,
       statusCode: dto.statusCode,

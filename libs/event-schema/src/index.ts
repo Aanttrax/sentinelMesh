@@ -17,6 +17,7 @@ export enum ThreatSeverity {
 
 /** Core HTTP event ingested from a monitored API. */
 export interface HttpEvent {
+  eventId: string;
   serviceId: ServiceId;
   idempotencyKey: IdempotencyKey;
   method: string;
