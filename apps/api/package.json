@@ -10,6 +10,7 @@
     "@nestjs/common": "^11.0.0",
     "@nestjs/core": "^11.0.0",
     "@nestjs/platform-express": "^11.0.0",
+    "@nestjs/throttler": "^6.5.0",
     "@sentinelmesh/api-key-management": "*",
     "@sentinelmesh/service-registration": "*",
     "class-transformer": "^0.5.1",

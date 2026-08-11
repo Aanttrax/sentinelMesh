@@ -11,3 +11,10 @@ export class ServiceNotAcceptingEventsError extends Error {
     this.name = 'ServiceNotAcceptingEventsError';
   }
 }
+
+export class RateLimitExceededError extends Error {
+  constructor() {
+    super('Rate limit exceeded');
+    this.name = 'RateLimitExceededError';
+  }
+}

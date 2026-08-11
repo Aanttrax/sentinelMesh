@@ -9,6 +9,7 @@ import {
 } from '@nestjs/common';
 import type { Response } from 'express';
 import { randomUUID } from 'node:crypto';
+import { RateLimitGuard } from './guards/rate-limit.guard';
 import { ApiKeyAuthGuard, type AuthenticatedRequest } from './guards/api-key-auth.guard';
 import { EventIngestionService } from './event-ingestion.service';
 import { IngestEventDto } from './dto/ingest-event.dto';
@@ -20,7 +21,7 @@ import { IngestEventDto } from './dto/ingest-event.dto';
  * and attaches `serviceId` to the request before any route handler runs.
  */
 @Controller('events')
-@UseGuards(ApiKeyAuthGuard)
+@UseGuards(RateLimitGuard, ApiKeyAuthGuard)
 export class EventIngestionController {
   constructor(private readonly eventIngestionService: EventIngestionService) {}
 

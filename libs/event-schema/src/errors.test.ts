@@ -1,4 +1,4 @@
-import { UnauthorizedEventError, ServiceNotAcceptingEventsError } from './errors';
+import { UnauthorizedEventError, ServiceNotAcceptingEventsError, RateLimitExceededError } from './errors';
 
 describe('UnauthorizedEventError', () => {
   it('should extend Error', () => {
@@ -31,5 +31,22 @@ describe('ServiceNotAcceptingEventsError', () => {
   it('should include the service ID in the message', () => {
     const error = new ServiceNotAcceptingEventsError('payment-api');
     expect(error.message).toBe('Service "payment-api" is not accepting events');
+  });
+});
+
+describe('RateLimitExceededError', () => {
+  it('should extend Error', () => {
+    const error = new RateLimitExceededError();
+    expect(error).toBeInstanceOf(Error);
+  });
+
+  it('should set the name to RateLimitExceededError', () => {
+    const error = new RateLimitExceededError();
+    expect(error.name).toBe('RateLimitExceededError');
+  });
+
+  it('should have the message "Rate limit exceeded"', () => {
+    const error = new RateLimitExceededError();
+    expect(error.message).toBe('Rate limit exceeded');
   });
 });

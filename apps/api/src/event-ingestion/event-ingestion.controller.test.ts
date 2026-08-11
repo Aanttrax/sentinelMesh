@@ -1,10 +1,12 @@
 /* eslint-disable @typescript-eslint/no-unsafe-argument -- supertest + NestJS getHttpServer() returns any */
 import { Test, type TestingModule } from '@nestjs/testing';
 import { INestApplication, ValidationPipe } from '@nestjs/common';
+import { ThrottlerModule } from '@nestjs/throttler';
 import request from 'supertest';
 import { EventIngestionController } from './event-ingestion.controller';
 import { EventIngestionService } from './event-ingestion.service';
 import { ApiKeyAuthGuard } from './guards/api-key-auth.guard';
+import { RateLimitGuard } from './guards/rate-limit.guard';
 import { ApiKeyManagementService } from '../api-key-management/api-key-management.service';
 import { InMemoryApiKeyRepository } from '../infrastructure/in-memory-api-key.repository';
 import { ServiceRegistrationService } from '../service-registration/service-registration.service';
@@ -35,10 +37,14 @@ describe('EventIngestionController (integration)', () => {
 
   beforeEach(async () => {
     const moduleFixture: TestingModule = await Test.createTestingModule({
+      imports: [
+        ThrottlerModule.forRoot([{ ttl: 60_000, limit: 100 }]),
+      ],
       controllers: [EventIngestionController],
       providers: [
         EventIngestionService,
         ApiKeyAuthGuard,
+        RateLimitGuard,
         ApiKeyManagementService,
         ServiceRegistrationService,
         {
@@ -405,5 +411,227 @@ describe('EventIngestionController (integration)', () => {
     expect(body.eventId).toMatch(
       /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/,
     );
+  });
+
+  // ── Rate Limiting ── 429 on exceeded limit ───────────────────────
+
+  it('should return 429 with structured body when rate limit is exceeded', async () => {
+    // Build a separate app with limit: 1 to trigger throttling quickly
+    const strictModule: TestingModule = await Test.createTestingModule({
+      imports: [
+        ThrottlerModule.forRoot([{ ttl: 60_000, limit: 1 }]),
+      ],
+      controllers: [EventIngestionController],
+      providers: [
+        EventIngestionService,
+        ApiKeyAuthGuard,
+        RateLimitGuard,
+        ApiKeyManagementService,
+        ServiceRegistrationService,
+        {
+          provide: SERVICE_REPOSITORY,
+          useClass: InMemoryServiceRepository,
+        },
+        {
+          provide: API_KEY_REPOSITORY,
+          useClass: InMemoryApiKeyRepository,
+        },
+        {
+          provide: EVENT_REPOSITORY,
+          useClass: InMemoryEventRepository,
+        },
+      ],
+    }).compile();
+
+    const strictApp = strictModule.createNestApplication();
+    strictApp.useGlobalPipes(
+      new ValidationPipe({
+        whitelist: true,
+        forbidNonWhitelisted: true,
+        transform: true,
+      }),
+    );
+    strictApp.useGlobalFilters(new DomainExceptionFilter());
+    await strictApp.init();
+
+    // Register a service + generate key for the strict-limit app
+    const svcReg = strictModule.get(ServiceRegistrationService);
+    const svc = await svcReg.registerService({
+      name: 'payment-api',
+      environment: 'production',
+      version: '1.0.0',
+    });
+    const keyMgmt = strictModule.get(ApiKeyManagementService);
+    const { rawKey } = await keyMgmt.generateKey(svc.id);
+
+    // First request — within limit, expect 202
+    await request(strictApp.getHttpServer())
+      .post('/events')
+      .set('X-Service-Id', svc.id)
+      .set('Authorization', `Bearer ${rawKey}`)
+      .send(validBody)
+      .expect(202);
+
+    // Second request — over limit, expect 429
+    const res = await request(strictApp.getHttpServer())
+      .post('/events')
+      .set('X-Service-Id', svc.id)
+      .set('Authorization', `Bearer ${rawKey}`)
+      .send(validBody)
+      .expect(429);
+
+    const body = res.body as ErrorShape;
+    expect(body).toMatchObject({
+      statusCode: 429,
+      message: 'Rate limit exceeded',
+      error: 'RateLimitExceededError',
+    });
+    expect(res.headers['retry-after']).toBe('60');
+
+    await strictApp.close();
+  });
+
+  // ── Rate Limiting ── Cross-service isolation ─────────────────────
+
+  it('should isolate rate limits per service', async () => {
+    const strictModule: TestingModule = await Test.createTestingModule({
+      imports: [
+        ThrottlerModule.forRoot([{ ttl: 60_000, limit: 1 }]),
+      ],
+      controllers: [EventIngestionController],
+      providers: [
+        EventIngestionService,
+        ApiKeyAuthGuard,
+        RateLimitGuard,
+        ApiKeyManagementService,
+        ServiceRegistrationService,
+        {
+          provide: SERVICE_REPOSITORY,
+          useClass: InMemoryServiceRepository,
+        },
+        {
+          provide: API_KEY_REPOSITORY,
+          useClass: InMemoryApiKeyRepository,
+        },
+        {
+          provide: EVENT_REPOSITORY,
+          useClass: InMemoryEventRepository,
+        },
+      ],
+    }).compile();
+
+    const strictApp = strictModule.createNestApplication();
+    strictApp.useGlobalPipes(
+      new ValidationPipe({
+        whitelist: true,
+        forbidNonWhitelisted: true,
+        transform: true,
+      }),
+    );
+    strictApp.useGlobalFilters(new DomainExceptionFilter());
+    await strictApp.init();
+
+    const svcReg = strictModule.get(ServiceRegistrationService);
+    const keyMgmt = strictModule.get(ApiKeyManagementService);
+
+    const svcA = await svcReg.registerService({
+      name: 'payment-api',
+      environment: 'production',
+      version: '1.0.0',
+    });
+    const { rawKey: keyA } = await keyMgmt.generateKey(svcA.id);
+
+    const svcB = await svcReg.registerService({
+      name: 'auth-api',
+      environment: 'production',
+      version: '1.0.0',
+    });
+    const { rawKey: keyB } = await keyMgmt.generateKey(svcB.id);
+
+    // Exhaust service A's limit (limit=1 → first request consumes it)
+    await request(strictApp.getHttpServer())
+      .post('/events')
+      .set('X-Service-Id', svcA.id)
+      .set('Authorization', `Bearer ${keyA}`)
+      .send(validBody)
+      .expect(202);
+
+    // Service A is now over limit
+    await request(strictApp.getHttpServer())
+      .post('/events')
+      .set('X-Service-Id', svcA.id)
+      .set('Authorization', `Bearer ${keyA}`)
+      .send(validBody)
+      .expect(429);
+
+    // Service B should still succeed
+    const resB = await request(strictApp.getHttpServer())
+      .post('/events')
+      .set('X-Service-Id', svcB.id)
+      .set('Authorization', `Bearer ${keyB}`)
+      .send(validBody)
+      .expect(202);
+
+    const body = resB.body as AcceptedShape;
+    expect(body.status).toBe('accepted');
+    expect(body.eventId).toBeTruthy();
+
+    await strictApp.close();
+  });
+
+  // ── Rate Limiting ── Unauthenticated over-limit returns 429 ──────
+
+  it('should return 429 for unauthenticated requests that exceed rate limit', async () => {
+    const strictModule: TestingModule = await Test.createTestingModule({
+      imports: [
+        ThrottlerModule.forRoot([{ ttl: 60_000, limit: 0 }]),
+      ],
+      controllers: [EventIngestionController],
+      providers: [
+        EventIngestionService,
+        ApiKeyAuthGuard,
+        RateLimitGuard,
+        ApiKeyManagementService,
+        ServiceRegistrationService,
+        {
+          provide: SERVICE_REPOSITORY,
+          useClass: InMemoryServiceRepository,
+        },
+        {
+          provide: API_KEY_REPOSITORY,
+          useClass: InMemoryApiKeyRepository,
+        },
+        {
+          provide: EVENT_REPOSITORY,
+          useClass: InMemoryEventRepository,
+        },
+      ],
+    }).compile();
+
+    const strictApp = strictModule.createNestApplication();
+    strictApp.useGlobalPipes(
+      new ValidationPipe({
+        whitelist: true,
+        forbidNonWhitelisted: true,
+        transform: true,
+      }),
+    );
+    strictApp.useGlobalFilters(new DomainExceptionFilter());
+    await strictApp.init();
+
+    // limit=0 → every request exceeds → expect 429, NOT 401
+    const res = await request(strictApp.getHttpServer())
+      .post('/events')
+      .set('X-Service-Id', 'some-service')
+      .send(validBody)
+      .expect(429);
+
+    const body = res.body as ErrorShape;
+    expect(body).toMatchObject({
+      statusCode: 429,
+      error: 'RateLimitExceededError',
+    });
+
+    await strictApp.close();
   });
 });

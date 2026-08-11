@@ -10,6 +10,7 @@ import { ApiKeyNotFoundError, ApiKeyAlreadyRevokedError } from '@sentinelmesh/ap
 import {
   UnauthorizedEventError,
   ServiceNotAcceptingEventsError,
+  RateLimitExceededError,
 } from '@sentinelmesh/event-schema';
 
 @Catch(
@@ -21,6 +22,7 @@ import {
   ApiKeyAlreadyRevokedError,
   UnauthorizedEventError,
   ServiceNotAcceptingEventsError,
+  RateLimitExceededError,
 )
 export class DomainExceptionFilter implements ExceptionFilter {
   catch(exception: Error, host: ArgumentsHost): void {
@@ -95,6 +97,16 @@ export class DomainExceptionFilter implements ExceptionFilter {
         statusCode: HttpStatus.SERVICE_UNAVAILABLE,
         message: exception.message,
         error: 'ServiceNotAcceptingEventsError',
+      });
+      return;
+    }
+
+    if (exception instanceof RateLimitExceededError) {
+      response.setHeader('Retry-After', '60');
+      response.status(HttpStatus.TOO_MANY_REQUESTS).json({
+        statusCode: HttpStatus.TOO_MANY_REQUESTS,
+        message: exception.message,
+        error: 'RateLimitExceededError',
       });
       return;
     }

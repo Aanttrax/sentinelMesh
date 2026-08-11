@@ -1,4 +1,4 @@
-export { UnauthorizedEventError, ServiceNotAcceptingEventsError } from './errors';
+export { UnauthorizedEventError, ServiceNotAcceptingEventsError, RateLimitExceededError } from './errors';
 export { EventRepository, EVENT_REPOSITORY } from './event.repository';
 
 /** Unique identifier for a registered service. */
