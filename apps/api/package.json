@@ -2,6 +2,7 @@
   "name": "@sentinelmesh/api",
   "version": "0.1.0",
   "private": true,
+  "main": "src/index.ts",
   "scripts": {
     "build": "tsc -b",
     "start:dev": "ts-node src/main.ts"
@@ -14,7 +15,9 @@
     "@sentinelmesh/api-key-management": "*",
     "@sentinelmesh/service-registration": "*",
     "class-transformer": "^0.5.1",
+    "bullmq": "^5.0.0",
     "class-validator": "^0.14.1",
+    "ioredis": "^5.4.0",
     "reflect-metadata": "^0.2.2",
     "rxjs": "^7.8.1"
   }

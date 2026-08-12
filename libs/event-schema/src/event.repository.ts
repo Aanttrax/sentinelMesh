@@ -7,4 +7,5 @@ export const EVENT_REPOSITORY = Symbol('EVENT_REPOSITORY');
 export interface EventRepository {
   save(event: HttpEvent): Promise<HttpEvent>;
   findByIdempotencyKey(serviceId: string, key: string): Promise<HttpEvent | null>;
+  updateStatus(eventId: string, status: string): Promise<void>;
 }

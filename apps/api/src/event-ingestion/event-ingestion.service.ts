@@ -1,12 +1,15 @@
 import { Injectable, Inject } from '@nestjs/common';
+import { Queue } from 'bullmq';
 import { EventRepository, EVENT_REPOSITORY, ServiceNotAcceptingEventsError } from '@sentinelmesh/event-schema';
 import { ServiceRegistrationService } from '../service-registration/service-registration.service';
+import { EVENT_PROCESSING_QUEUE } from './queue.constants';
 import type { IngestEventDto } from './dto/ingest-event.dto';
 import type { HttpEvent } from '@sentinelmesh/event-schema';
 
 /**
  * Orchestrates HTTP event ingestion: validates service state, enriches the
- * DTO into a full {@link HttpEvent}, and persists it via the repository port.
+ * DTO into a full {@link HttpEvent}, persists it via the repository port,
+ * and publishes accepted events to the BullMQ event-processing queue.
  *
  * The controller generates the {@link eventId} (design ADR — REQ-EVT-002)
  * and passes it here so the service remains pure orchestration.
@@ -17,6 +20,8 @@ export class EventIngestionService {
     private readonly serviceRegistration: ServiceRegistrationService,
     @Inject(EVENT_REPOSITORY)
     private readonly eventRepository: EventRepository,
+    @Inject(EVENT_PROCESSING_QUEUE)
+    private readonly queue: Queue,
   ) {}
 
   async ingestEvent(
@@ -47,9 +52,11 @@ export class EventIngestionService {
       durationMs: dto.durationMs,
       timestamp: dto.timestamp ? new Date(dto.timestamp) : new Date(),
       ipAddress: dto.ipAddress,
+      status: 'pending',
     };
 
     await this.eventRepository.save(event);
+    await this.queue.add('process-event', { eventId });
 
     return { eventId, status: 'accepted' };
   }

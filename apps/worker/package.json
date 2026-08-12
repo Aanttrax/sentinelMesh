@@ -3,6 +3,16 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "build": "tsc -b"
+    "build": "tsc -b",
+    "start:dev": "ts-node src/main.ts"
+  },
+  "dependencies": {
+    "@sentinelmesh/api": "*",
+    "@sentinelmesh/event-schema": "*",
+    "bullmq": "^5.0.0",
+    "ioredis": "^5.4.0"
+  },
+  "devDependencies": {
+    "ts-node": "^10.9.2"
   }
 }

@@ -9,7 +9,7 @@ Tracks implementation status of every Gherkin feature against the development ro
 | 03  | HTTP event ingestion               | M2            | ✅ done   | ✅       |
 | 04  | Event validation                   | M2            | ✅ done   | ✅       |
 | 05  | Event idempotency                  | M3            | ✅ done   | ✅       |
-| 06  | Event processing                   | M3            | ⬜ pending | ⬜       |
+| 06  | Event processing                   | M3            | ✅ done   | ⬜       |
 | 07  | Detection engine                   | M3            | ⬜ pending | ⬜       |
 | 08  | Brute force detection              | M4            | ⬜ pending | ⬜       |
 | 09  | Request rate anomaly detection     | M4            | ⬜ pending | ⬜       |

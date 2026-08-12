@@ -11,6 +11,7 @@ function createEvent(overrides: Partial<HttpEvent> = {}): HttpEvent {
     statusCode: 201,
     durationMs: 87,
     timestamp: new Date('2026-08-11T10:00:00Z'),
+    status: 'pending',
     ...overrides,
   };
 }
@@ -97,6 +98,56 @@ describe('InMemoryEventRepository', () => {
       const result = await repo.findByIdempotencyKey('svc-b', 'idem-1');
 
       expect(result).toBeNull();
+    });
+  });
+
+  describe('updateStatus', () => {
+    it('should transition event status from pending through processing to processed', async () => {
+      const event = createEvent({ eventId: 'evt-001', status: 'pending' });
+      await repo.save(event);
+
+      await repo.updateStatus('evt-001', 'processing');
+
+      const afterProcessing = (await repo.findAll()).find((e) => e.eventId === 'evt-001');
+      expect(afterProcessing).toBeDefined();
+      if (afterProcessing) {
+        expect(afterProcessing.status).toBe('processing');
+      }
+
+      await repo.updateStatus('evt-001', 'processed');
+
+      const afterProcessed = (await repo.findAll()).find((e) => e.eventId === 'evt-001');
+      expect(afterProcessed).toBeDefined();
+      if (afterProcessed) {
+        expect(afterProcessed.status).toBe('processed');
+      }
+    });
+
+    it('should be a no-op when eventId does not exist', async () => {
+      // No event saved — calling updateStatus on a missing eventId should not throw
+      await expect(
+        repo.updateStatus('nonexistent', 'processing'),
+      ).resolves.toBeUndefined();
+
+      const all = await repo.findAll();
+      expect(all).toHaveLength(0);
+    });
+
+    it('should persist status changes visible via findAll', async () => {
+      const event1 = createEvent({ eventId: 'evt-a', idempotencyKey: 'key-a' });
+      const event2 = createEvent({ eventId: 'evt-b', idempotencyKey: 'key-b' });
+      await repo.save(event1);
+      await repo.save(event2);
+
+      await repo.updateStatus('evt-a', 'failed');
+      await repo.updateStatus('evt-b', 'processing');
+
+      const all = await repo.findAll();
+      expect(all).toHaveLength(2);
+      const evtA = all.find((e) => e.eventId === 'evt-a');
+      const evtB = all.find((e) => e.eventId === 'evt-b');
+      if (evtA) expect(evtA.status).toBe('failed');
+      if (evtB) expect(evtB.status).toBe('processing');
     });
   });
 });

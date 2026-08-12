@@ -4,15 +4,18 @@ import { ServiceRegistrationService } from '../service-registration/service-regi
 import { InMemoryEventRepository } from '../infrastructure/in-memory-event.repository';
 import { EVENT_REPOSITORY, ServiceNotAcceptingEventsError } from '@sentinelmesh/event-schema';
 import { Service, ServiceNotFoundError } from '@sentinelmesh/service-registration';
+import { EVENT_PROCESSING_QUEUE } from './queue.constants';
 import type { IngestEventDto } from './dto/ingest-event.dto';
 
 describe('EventIngestionService', () => {
   let svc: EventIngestionService;
   let repo: InMemoryEventRepository;
   let mockGetService: jest.Mock;
+  let mockQueue: { add: jest.Mock };
 
   beforeEach(async () => {
     mockGetService = jest.fn();
+    mockQueue = { add: jest.fn().mockResolvedValue(undefined) };
 
     const module: TestingModule = await Test.createTestingModule({
       providers: [
@@ -24,6 +27,10 @@ describe('EventIngestionService', () => {
         {
           provide: EVENT_REPOSITORY,
           useClass: InMemoryEventRepository,
+        },
+        {
+          provide: EVENT_PROCESSING_QUEUE,
+          useValue: mockQueue,
         },
       ],
     }).compile();
@@ -44,7 +51,7 @@ describe('EventIngestionService', () => {
 
   // ── Happy path ──────────────────────────────────────────────────
 
-  it('should return eventId and status "accepted" for an active service', async () => {
+  it('should return eventId and status "accepted" for an active service and enqueue the event', async () => {
     const activeService = Service.create({
       name: 'payment-api',
       environment: 'production',
@@ -55,6 +62,9 @@ describe('EventIngestionService', () => {
     const result = await svc.ingestEvent('svc-id', 'evt-abc-123', dto);
 
     expect(result).toEqual({ eventId: 'evt-abc-123', status: 'accepted' });
+    expect(mockQueue.add).toHaveBeenCalledWith('process-event', {
+      eventId: 'evt-abc-123',
+    });
 
     const events = await repo.findAll();
     expect(events).toHaveLength(1);
@@ -66,6 +76,7 @@ describe('EventIngestionService', () => {
       statusCode: 200,
       durationMs: 42,
       idempotencyKey: 'idem-001',
+      status: 'pending',
     });
     // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
     expect(first!.timestamp).toBeInstanceOf(Date);
@@ -121,7 +132,7 @@ describe('EventIngestionService', () => {
 
   // ── Deduplication ────────────────────────────────────────────
 
-  it('should return status "duplicate" with the original eventId when the same (serviceId, key) is seen again', async () => {
+  it('should return status "duplicate" with the original eventId and NOT enqueue', async () => {
     const activeService = Service.create({
       name: 'payment-api',
       environment: 'production',
@@ -129,14 +140,16 @@ describe('EventIngestionService', () => {
     });
     mockGetService.mockResolvedValue(activeService);
 
-    // First ingestion — accepted
+    // First ingestion — accepted, enqueued
     const first = await svc.ingestEvent('svc-a', 'evt-original', dto);
     expect(first).toEqual({ eventId: 'evt-original', status: 'accepted' });
     expect(await repo.findAll()).toHaveLength(1);
+    expect(mockQueue.add).toHaveBeenCalledTimes(1);
 
-    // Second ingestion — duplicate
+    // Second ingestion — duplicate, NOT enqueued
     const second = await svc.ingestEvent('svc-a', 'evt-duplicate', dto);
     expect(second).toEqual({ eventId: 'evt-original', status: 'duplicate' });
+    expect(mockQueue.add).toHaveBeenCalledTimes(1); // still 1, no new call
 
     // No additional event saved
     expect(await repo.findAll()).toHaveLength(1);

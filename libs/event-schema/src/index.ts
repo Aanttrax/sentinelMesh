@@ -15,6 +15,9 @@ export enum ThreatSeverity {
   Critical = 'critical',
 }
 
+/** Processing status for an event in the async pipeline. */
+export type EventStatus = 'pending' | 'processing' | 'processed' | 'failed';
+
 /** Core HTTP event ingested from a monitored API. */
 export interface HttpEvent {
   eventId: string;
@@ -26,4 +29,6 @@ export interface HttpEvent {
   durationMs: number;
   timestamp: Date;
   ipAddress?: string;
+  /** Tracks where the event is in the async processing pipeline. Defaults to `'pending'`. */
+  status: EventStatus;
 }

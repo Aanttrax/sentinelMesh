@@ -1,7 +1,7 @@
 import { HttpEvent, ThreatSeverity } from './index';
 
 describe('HttpEvent', () => {
-  it('should accept a valid event', () => {
+  it('should accept a valid event with status', () => {
     const event: HttpEvent = {
       eventId: 'evt-test-001',
       serviceId: 'svc-001',
@@ -11,10 +11,12 @@ describe('HttpEvent', () => {
       statusCode: 200,
       durationMs: 42,
       timestamp: new Date(),
+      status: 'pending',
     };
 
     expect(event.serviceId).toBe('svc-001');
     expect(event.method).toBe('GET');
+    expect(event.status).toBe('pending');
   });
 });
 

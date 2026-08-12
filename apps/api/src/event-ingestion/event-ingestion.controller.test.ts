@@ -16,6 +16,7 @@ import { DomainExceptionFilter } from '../common/domain-exception.filter';
 import { API_KEY_REPOSITORY } from '@sentinelmesh/api-key-management';
 import { SERVICE_REPOSITORY } from '@sentinelmesh/service-registration';
 import { EVENT_REPOSITORY } from '@sentinelmesh/event-schema';
+import { EVENT_PROCESSING_QUEUE } from './queue.constants';
 
 /** Shape of a 202 accepted response. */
 interface AcceptedShape {
@@ -58,6 +59,10 @@ describe('EventIngestionController (integration)', () => {
         {
           provide: EVENT_REPOSITORY,
           useClass: InMemoryEventRepository,
+        },
+        {
+          provide: EVENT_PROCESSING_QUEUE,
+          useValue: { add: jest.fn().mockResolvedValue(undefined) },
         },
       ],
     }).compile();
@@ -440,6 +445,10 @@ describe('EventIngestionController (integration)', () => {
           provide: EVENT_REPOSITORY,
           useClass: InMemoryEventRepository,
         },
+        {
+          provide: EVENT_PROCESSING_QUEUE,
+          useValue: { add: jest.fn().mockResolvedValue(undefined) },
+        },
       ],
     }).compile();
 
@@ -516,6 +525,10 @@ describe('EventIngestionController (integration)', () => {
         {
           provide: EVENT_REPOSITORY,
           useClass: InMemoryEventRepository,
+        },
+        {
+          provide: EVENT_PROCESSING_QUEUE,
+          useValue: { add: jest.fn().mockResolvedValue(undefined) },
         },
       ],
     }).compile();
@@ -604,6 +617,10 @@ describe('EventIngestionController (integration)', () => {
         {
           provide: EVENT_REPOSITORY,
           useClass: InMemoryEventRepository,
+        },
+        {
+          provide: EVENT_PROCESSING_QUEUE,
+          useValue: { add: jest.fn().mockResolvedValue(undefined) },
         },
       ],
     }).compile();
